@@ -43,7 +43,7 @@ public class FileWordSupplier implements WordSupplier {
 	// @return true if added.
 	public boolean addWord(String word) {
 		word = word.trim().toUpperCase();
-		if( word.matches("^[a-zA-Z]+$") ) {
+		if( word.matches("^[a-zA-Z']+$") ) {
 			words.add(word);
 			return true;
 		}else{

@@ -65,9 +65,8 @@ public:
         return data[i];
     }
     T& operator()(std::size_t i, std::size_t j) {
-        std::size_t k = i*NCOL +j;
-        assert(k<SIZE);
-        return (*this)[k];
+        assert(i < NROW && j < NCOL);
+        return (*this)[i*NCOL +j];
     }
     const T& operator()(std::size_t i, std::size_t j) const{
         ThisType& me = const_cast<ThisType&>(*this);
@@ -125,7 +124,8 @@ struct PhoneNumberWord {
                 }
                number += itd->second;
             }
-            if( number.length() > 1) {
+            StringList &sl = n2w[number];
+            if( number.length() > 1 && std::find(sl.begin(), sl.end(), w) == sl.end() ) {
                 n2w[number].push_back( w );
             }
         }
@@ -145,8 +145,8 @@ struct PhoneNumberWord {
             String s;
             bool validWord = true;
             for(String::iterator it=line.begin(); it!=line.end(); ++it) {
-                if( std::isalpha(*it) ) {
-                    s += std::toupper(*it);
+                if( isalpha(*it) ) {
+                    s += toupper(*it);
                 }else if( *it == '\'' || *it=='-' ) {
                     break;
                 }else{
@@ -181,7 +181,7 @@ struct PhoneNumberWord {
             os << "No digits in " << adigits << std::endl;
             return ;
         }
-        StringListMatrix m(N, N);
+        StringListMatrix m(N+1, N);
         for(int i=0; i<N-1; ++i) {  // scan
             if( isSep(digits[i]) ) continue;
             if( isSep(digits[i+1]) ) {
@@ -190,8 +190,8 @@ struct PhoneNumberWord {
             }
 
             for(int j=i+minWordLen; j<=N; ++j) { // end of string
-                matchWord(digits, i, j-i, m);
-                if( isSep(digits[j]) ) {  // separator
+                matchWord(digits.substr(i, j-i), i, j-i, m);
+                if( j == N || isSep(digits[j]) ) {  // separator
                     break;
                 }
             }
@@ -214,7 +214,7 @@ struct PhoneNumberWord {
         if( it != n2w.end() )
             matchedWords(length, startpos) = it->second;
     }
-    void printMatrix( StringListMatrix& m, Ostream& os ) {
+    void printMatrix( StringListMatrix& m, Ostream& os ) const {
         os << "<startPos, length: matched Strings>" << std::endl;
         for(int i=minWordLen; i<m.NROW; ++i) {
             for(int j=0; j<m.NCOL; ++j) {
@@ -307,7 +307,7 @@ int run(int argc, const char* argv[])
     const char *dictname=NULL;
     String number;
     for(int i=1; i<argc; ++i) {
-        if( 0 == strcmp(argv[i], "-n") ) {
+        if( 0 == strcmp(argv[i], "-d") ) {
             ++i;
             dictname = argv[i];
         }else if( 0 == strcmp(argv[i], "-h")
@@ -373,5 +373,8 @@ void test() {
 
 int main(int argc, const char* argv[])
 {
+//    const char *args[] = {"prog", "2255"};
+//    return jz::run(2, args);
     return jz::run(argc, argv);
 }
+

@@ -1,6 +1,6 @@
 package org.challenge.phoneword;
 
-import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.HashMap;
@@ -51,14 +51,15 @@ public class HashNumberWordMatcher implements NumberWordMatcher {
 					ws = new LinkedList<String>();
 					n2w.put(num, ws);
 				}
-				ws.add(w);
+				if( ! ws.contains(w) )
+					ws.add(w);
 			}
 		}		
 	}
 	boolean isDelimiter(char ch) {
 		return ch > '9' || ch < '2';
 	}
-	public void findWord(String adigits, PrintStream p) {
+	public void findWord(String adigits, PrintWriter p) {
 		//-- remove non-digit
 		StringBuilder sb = new StringBuilder();
 		for(int i=0; i<adigits.length(); ++i) {
@@ -69,8 +70,8 @@ public class HashNumberWordMatcher implements NumberWordMatcher {
 		String digits = sb.toString();
 		
 		int N = digits.length();
-		List[][] m = new List[N][N];
-		for(int i=0; i<N; ++i) 
+		List[][] m = new List[N+1][N];
+		for(int i=0; i<N+1; ++i) 
 			for(int j=0; j<N; ++j)
 				m[i][j] = new LinkedList();
 		
@@ -81,23 +82,23 @@ public class HashNumberWordMatcher implements NumberWordMatcher {
 				continue;
 			}
 			
-			for(int j=i+minWordLen; j<N; ++j) {
+			for(int j=i+minWordLen; j<=N; ++j) {
 				matchWord(digits.substring(i, j), i,j-i, m);
-				if( isDelimiter(digits.charAt(j)) ) break;
+				if( j==N || isDelimiter(digits.charAt(j)) ) break;
 			}
 		} // for i
 		
-		printMatrix(m, p);
+//		printMatrix(m, p);
 		
-//		constructWords(0, digits, m, "", p);
-		
+		constructWords(0, digits, m, "", p);
+		p.flush();	
 	}
 	void matchWord(String digits, int startpos, int length, List[][] m) {
 		List<String> w = n2w.get(digits);
 		if(w != null)
 			m[length][startpos] = w;
 	}
-	public void printMatrix(List[][] m, PrintStream p) {
+	public void printMatrix(List[][] m, PrintWriter p) {
 		p.println("<startPos, length: matched Strings>");
         for(int i=minWordLen; i<m.length; ++i) {
             for(int j=0; j<m[0].length; ++j) {
@@ -111,23 +112,24 @@ public class HashNumberWordMatcher implements NumberWordMatcher {
             }
         }
 	}
-	void constructWords(int startpos, String digits, List[][] m, String pre, PrintStream p) {
+	void constructWords(int startpos, String digits, List[][] m, String pre, PrintWriter p) {
 		int NR = m.length, NC = m[0].length;
 		char DEL = '-';
 		if( startpos == digits.length() ) { // end of string. print result
 			StringBuilder ss = new StringBuilder(); 
 			// remove unnecessary DEL
 			int i=0;
-//			while( pre.charAt(i++) == DEL ) ;  // delete leading DEL
-//			--i;
-//			for(; i<pre.length(); ++i) {
-//				if( pre.charAt(i) == DEL && (pre.charAt(i+1) == DEL 
-//						|| (!Character.isLetter(pre.charAt(i-1)) && Character.isLetter(pre.charAt(i+1)))) ){
-//					continue;
-//				}
-//				ss.append(pre.charAt(i));
-//			}
+			while( pre.charAt(i++) == DEL ) ;  // delete leading DEL
+			--i;
+			for(; i<pre.length(); ++i) {
+				if( pre.charAt(i) == DEL && (pre.charAt(i+1) == DEL 
+						|| (!Character.isLetter(pre.charAt(i-1)) && !Character.isLetter(pre.charAt(i+1)))) ){
+					continue;
+				}
+				ss.append(pre.charAt(i));
+			}
 			p.println(ss.toString());
+			return;
 		}
         // search for next matched word
         int minStep = 0;

@@ -1,8 +1,6 @@
 package org.challenge.phoneword;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.Scanner;
 
 
@@ -26,8 +24,8 @@ public class Application {
 	public static void run(String[] args) {
 	    String dictname="";
 	    String number="";
-	    for(int i=1; i<args.length; ++i) {
-	        if( args[i] == "-n" ) {
+	    for(int i=0; i<args.length; ++i) {
+	        if( args[i] == "-d" ) {
 	            ++i;
 	            dictname = args[i];
 	        }else if( args[i] == "-h"
@@ -54,7 +52,7 @@ public class Application {
 	    
 	    NumberWordMatcher matcher = new HashNumberWordMatcher();
 	    WordSupplier ws = new FileWordSupplier();
-	    if( ws.load(dictname) <=0 ) {
+	    if( ws.load(dictname) <= 0 ) {
 	    	System.out.println("Failed to load dictionary");
 	    	return;
 	    }
@@ -68,12 +66,13 @@ public class Application {
 	        }
 	        String num = number.substring(currPos, pos);
 	        System.out.println(num);
-	        matcher.findWord(num, System.out);
+	        matcher.findWord(num, new PrintWriter(System.out));
 
 	        currPos = pos;
 	    }
 	}
 	public static void main(String[] args) {
-		run(new String[]{"program", "2255.63"});
+		run(args);
+//		run(new String[]{"program", "2255"});
 	}
 }
